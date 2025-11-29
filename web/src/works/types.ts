@@ -1,9 +1,8 @@
 export interface Work {
     id: string;
-    userId: string;
+    userEmail: string;
     title: string;
     description?: string | null;
     createdAt: number;
-    imageUrl?: string | null;
-    imagePath?: string | null; // Storage path used when deleting files
+    imageData?: string | null; // data URL (base64) 형태로 이미지 저장
   }

@@ -1,11 +1,12 @@
+// src/pages/DashboardPage.tsx
 import { Link } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
 
 export default function DashboardPage() {
   const { user, logout } = useAuth();
 
-  async function handleLogout() {
-    await logout();
+  function handleLogout() {
+    logout();
   }
 
   return (
@@ -16,9 +17,11 @@ export default function DashboardPage() {
           <Link to="/works" className="header-link" style={{ marginRight: 16 }}>
             Works
           </Link>
-          <span style={{ fontSize: 12, opacity: 0.7, marginRight: 12 }}>
-            {user?.email}
-          </span>
+          {user && (
+            <span style={{ fontSize: 12, opacity: 0.7, marginRight: 12 }}>
+              {user.email}
+            </span>
+          )}
           <button className="header-link" onClick={handleLogout}>
             Log out
           </button>
