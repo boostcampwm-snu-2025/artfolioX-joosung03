@@ -64,9 +64,35 @@ function toApiWork(work) {
     project: work.project ?? null,
     year: work.year ?? null,
     tags: work.tags ?? [],
+    category: work.category ?? null,
+    materials: work.materials ?? [],
     createdAt: work.createdAt,
     imageUrl,
   };
+}
+
+function parseStringArray(raw) {
+  if (typeof raw === "string") {
+    if (raw.trim().length === 0) return [];
+    try {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) {
+        return parsed
+          .map((t) => (typeof t === "string" ? t.trim() : ""))
+          .filter(Boolean);
+      }
+    } catch {
+      // fall back to comma separated
+    }
+    return raw
+      .split(",")
+      .map((t) => t.trim())
+      .filter(Boolean);
+  }
+  if (Array.isArray(raw)) {
+    return raw.map((t) => (typeof t === "string" ? t.trim() : "")).filter(Boolean);
+  }
+  return [];
 }
 
 // ---------- Works API ----------
@@ -85,20 +111,22 @@ app.get("/api/works", (req, res) => {
 
 // POST /api/works
 app.post("/api/works", upload.single("image"), (req, res) => {
-  const { userEmail, title, description, project, year, tags } =
-    req.body;
+  const {
+    userEmail,
+    title,
+    description,
+    project,
+    year,
+    tags,
+    category,
+    materials,
+  } = req.body;
   if (!userEmail || !title) {
     return res.status(400).send("userEmail and title are required");
   }
 
-  let parsedTags = [];
-  if (typeof tags === "string" && tags.length > 0) {
-    try {
-      parsedTags = JSON.parse(tags);
-    } catch {
-      parsedTags = tags.split(",").map((t) => t.trim()).filter(Boolean);
-    }
-  }
+  const parsedTags = parseStringArray(tags);
+  const parsedMaterials = parseStringArray(materials);
 
   const all = readWorks();
   const now = Date.now();
@@ -112,6 +140,8 @@ app.post("/api/works", upload.single("image"), (req, res) => {
     project: project?.trim() || null,
     year: year?.trim() || null,
     tags: parsedTags,
+    category: typeof category === "string" ? category.trim() || null : null,
+    materials: parsedMaterials,
     createdAt: now,
     imageFilename: req.file ? req.file.filename : null,
   };
@@ -132,20 +162,15 @@ app.put("/api/works/:id", upload.single("image"), (req, res) => {
   }
 
   const existing = all[idx];
-  const { title, description, project, year, tags } = req.body;
+  const { title, description, project, year, tags, category, materials } =
+    req.body;
 
-  let parsedTags = existing.tags || [];
-  if (typeof tags === "string") {
-    if (tags.length === 0) {
-      parsedTags = [];
-    } else {
-      try {
-        parsedTags = JSON.parse(tags);
-      } catch {
-        parsedTags = tags.split(",").map((t) => t.trim()).filter(Boolean);
-      }
-    }
-  }
+  const parsedTags =
+    typeof tags === "undefined" ? existing.tags || [] : parseStringArray(tags);
+  const parsedMaterials =
+    typeof materials === "undefined"
+      ? existing.materials || []
+      : parseStringArray(materials);
 
   let imageFilename = existing.imageFilename;
   if (req.file) {
@@ -175,6 +200,13 @@ app.put("/api/works/:id", upload.single("image"), (req, res) => {
         ? year.trim() || null
         : existing.year,
     tags: parsedTags,
+    category:
+      typeof category === "string"
+        ? category.trim() || null
+        : typeof category === "undefined"
+        ? existing.category ?? null
+        : existing.category ?? null,
+    materials: parsedMaterials,
     imageFilename,
   };
 
