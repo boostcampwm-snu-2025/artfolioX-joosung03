@@ -93,9 +93,14 @@ npm run dev
   - 성장 타임라인: before/after 비교 뷰, 월별/카테고리별 작업량 및 스타일 변화 차트
   - 자동 PDF/시트 생성: 선택한 포트폴리오 버전을 A4 레이아웃으로 자동 배치해 출력용 PDF 생성
 
-- **단계별 구현 계획(초안)**
-  1. 최소 기능: 이메일 로그인, 단일 이미지 + 기본 메모가 포함된 작품 업로드 및 목록/상세 보기
-  2. 포트폴리오 버전: 작품 선택 및 순서 지정, 읽기 전용 공유 링크
-  3. 템플릿 도입: 학교별 규칙 정의, 포트폴리오 화면에서 규칙 충족 여부와 부족 카테고리 표시
-  4. 지도 선생님 모드 + PDF: 코멘트/평가 UI 추가, 초기에는 브라우저 인쇄 기반, 이후 PDF 라이브러리 도입
+### 2주차 설계 & 3주차 데모 준비 (요약)
+- 필수 데모 범위: (1) 포트폴리오 공유 링크(뷰어), (2) 템플릿 규칙 충족도 표시, (3) 선생님 코멘트 수집(공개 뷰).
+- BDD 핵심 시나리오:
+  - 공유 링크: 편집 가능한 포트폴리오 → “공개 링크 만들기” → 고유 URL 생성·읽기 전용 뷰 확인.
+  - 템플릿 검증: 템플릿 선택 → 규칙 적용 → 충족도/부족 카테고리 경고 표시.
+  - 코멘트: 공유 뷰에서 코멘트 제출 → 서버 저장 → 학생 측 리스트 반영.
+- 데이터 구조(요약): `PortfolioVersion`에 `templateId`, `shareSlug`; `Template`(rules, min/maxTotal); `FeedbackComment`(portfolioId, workId?, authorName, role?, text, createdAt); `Work`에 `category`, `materials`.
+- 브랜치/작업 규칙: main 직접 커밋 금지, `feature/<scope>-<short>` 단위로 PR → main 머지(리뷰/스쿼시 권장). 예) `feature/portfolio-share-link`, `feature/template-check`, `feature/comments-collector`.
+- 우선순위 제안: (1) 템플릿 검증 로직, (2) 공유 링크 뷰어, (3) 코멘트 폼/저장/리스트.
+- 자세한 BDD·데이터 정의는 GitHub Wiki “2주차 설계 · 주제 선정 및 BDD 정리” 참고.
 
