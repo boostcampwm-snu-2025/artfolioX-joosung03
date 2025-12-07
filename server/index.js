@@ -4,6 +4,8 @@ const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
 const { readWorks, writeWorks } = require("./worksStore");
+const { readTemplates } = require("./templatesStore");
+const { readComments, writeComments } = require("./commentsStore");
 const {
     readPortfolios,
     writePortfolios,
@@ -90,9 +92,106 @@ function parseStringArray(raw) {
       .filter(Boolean);
   }
   if (Array.isArray(raw)) {
-    return raw.map((t) => (typeof t === "string" ? t.trim() : "")).filter(Boolean);
+    return raw
+      .map((t) => (typeof t === "string" ? t.trim() : ""))
+      .filter(Boolean);
   }
   return [];
+}
+
+function generateSlug() {
+  return Math.random().toString(36).slice(2, 8);
+}
+
+function buildWorksMap() {
+  const works = readWorks();
+  const map = new Map();
+  works.forEach((w) => map.set(w.id, w));
+  return map;
+}
+
+function computeReadiness(portfolio, template, worksMap) {
+  if (!template || !Array.isArray(template.rules)) return null;
+
+  const totals = {
+    total: portfolio.items.length,
+    minTotal: template.minTotal ?? null,
+    maxTotal: template.maxTotal ?? null,
+  };
+
+  let missingCount = 0;
+  let totalRequired = 0;
+
+  const rules = template.rules.map((rule) => {
+    const required = rule.minCount ?? 0;
+    totalRequired += required;
+    const current = portfolio.items.reduce((acc, item) => {
+      const work = worksMap.get(item.workId);
+      if (!work) return acc;
+      const category = work.category || "uncategorized";
+      return category === rule.category ? acc + 1 : acc;
+    }, 0);
+
+    const missing = Math.max(0, required - current);
+    missingCount += missing;
+    const maxExceeded =
+      typeof rule.maxCount === "number" && rule.maxCount >= 0
+        ? Math.max(0, current - rule.maxCount)
+        : undefined;
+
+    let status = "ok";
+    if (missing > 0) status = "missing";
+    else if (maxExceeded && maxExceeded > 0) status = "exceed";
+
+    return {
+      category: rule.category,
+      required,
+      current,
+      status,
+      missing,
+      maxExceeded,
+    };
+  });
+
+  // total coverage check
+  if (typeof totals.minTotal === "number" && totals.minTotal > 0) {
+    if (totals.total < totals.minTotal) {
+      missingCount += totals.minTotal - totals.total;
+    }
+  }
+
+  let summaryStatus = "ok";
+  if (missingCount > 0) summaryStatus = "missing";
+  else {
+    const exceedsTotal =
+      typeof totals.maxTotal === "number" && totals.total > totals.maxTotal;
+    if (exceedsTotal) summaryStatus = "exceed";
+    if (totals.total === 0) summaryStatus = "empty";
+  }
+
+  const coveragePercent =
+    totalRequired > 0
+      ? Math.max(
+          0,
+          Math.min(
+            100,
+            Math.round(((totalRequired - missingCount) / totalRequired) * 100)
+          )
+        )
+      : 100;
+
+  return {
+    portfolioId: portfolio.id,
+    templateId: template.id,
+    templateName: template.name,
+    summary: {
+      status: summaryStatus,
+      missingCount,
+      coveragePercent,
+      total: totals.total,
+    },
+    rules,
+  };
 }
 
 // ---------- Works API ----------
@@ -239,6 +338,20 @@ app.delete("/api/works/:id", (req, res) => {
 
 // ---------- Portfolios helper ----------
 
+// ---------- Templates API ----------
+
+app.get("/api/templates", (_req, res) => {
+  const templates = readTemplates();
+  res.json(templates);
+});
+
+app.get("/api/templates/:id", (req, res) => {
+  const templates = readTemplates();
+  const tpl = templates.find((t) => t.id === req.params.id);
+  if (!tpl) return res.status(404).send("Template not found");
+  res.json(tpl);
+});
+
 function normalizePortfolioItem(raw) {
   if (!raw || typeof raw !== "object") return null;
   if (!raw.workId || typeof raw.workId !== "string") return null;
@@ -284,6 +397,7 @@ app.post("/api/portfolios", (req, res) => {
     targetMajor = null,
     year = null,
     items,
+    templateId = null,
   } = req.body;
 
   if (!userEmail || !title) {
@@ -316,6 +430,9 @@ app.post("/api/portfolios", (req, res) => {
     year:
       typeof year === "string" ? year.trim() || null : null,
     items: normalizedItems,
+    templateId:
+      typeof templateId === "string" ? templateId.trim() || null : null,
+    shareSlug: null,
     createdAt: now,
     updatedAt: now,
   };
@@ -336,7 +453,7 @@ app.put("/api/portfolios/:id", (req, res) => {
   }
 
   const existing = all[idx];
-  const { title, targetSchool, targetMajor, year, items } =
+  const { title, targetSchool, targetMajor, year, items, templateId } =
     req.body;
 
   const updated = { ...existing };
@@ -373,12 +490,71 @@ app.put("/api/portfolios/:id", (req, res) => {
       .filter(Boolean);
   }
 
+  if (typeof templateId === "string") {
+    updated.templateId = templateId.trim() || null;
+  }
+  if (templateId === null) {
+    updated.templateId = null;
+  }
+
   updated.updatedAt = Date.now();
 
   all[idx] = updated;
   writePortfolios(all);
 
   res.json(updated);
+});
+
+// POST /api/portfolios/:id/share -> generate share slug
+app.post("/api/portfolios/:id/share", (req, res) => {
+  const id = req.params.id;
+  const all = readPortfolios();
+  const idx = all.findIndex((p) => p.id === id);
+  if (idx === -1) {
+    return res.status(404).send("Portfolio not found");
+  }
+
+  const existing = all[idx];
+  const slug = existing.shareSlug || generateSlug();
+
+  const updated = {
+    ...existing,
+    shareSlug: slug,
+    updatedAt: Date.now(),
+  };
+  all[idx] = updated;
+  writePortfolios(all);
+
+  const baseUrl = process.env.BASE_URL || `http://localhost:${PORT}`;
+  res.json({
+    shareSlug: slug,
+    url: `${baseUrl}/share/${slug}`,
+  });
+});
+
+// POST /api/portfolios/:id/readiness { templateId }
+app.post("/api/portfolios/:id/readiness", (req, res) => {
+  const id = req.params.id;
+  const { templateId } = req.body || {};
+  if (!templateId || typeof templateId !== "string") {
+    return res.status(400).send("templateId is required");
+  }
+
+  const all = readPortfolios();
+  const portfolio = all.find((p) => p.id === id);
+  if (!portfolio) {
+    return res.status(404).send("Portfolio not found");
+  }
+
+  const templates = readTemplates();
+  const template = templates.find((t) => t.id === templateId);
+  if (!template) {
+    return res.status(404).send("Template not found");
+  }
+
+  const worksMap = buildWorksMap();
+  const readiness = computeReadiness(portfolio, template, worksMap);
+  res.json(readiness);
 });
 
 // DELETE /api/portfolios/:id
@@ -394,6 +570,89 @@ app.delete("/api/portfolios/:id", (req, res) => {
   writePortfolios(all);
 
   res.status(204).send();
+});
+
+// ---------- Public shared view & comments ----------
+
+function findPortfolioBySlug(slug) {
+  if (!slug) return null;
+  const all = readPortfolios();
+  return all.find((p) => p.shareSlug === slug) || null;
+}
+
+app.get("/api/shared/:slug", (req, res) => {
+  const slug = req.params.slug;
+  const portfolio = findPortfolioBySlug(slug);
+  if (!portfolio) return res.status(404).send("Shared portfolio not found");
+
+  const worksMap = buildWorksMap();
+  const templates = readTemplates();
+  const template = portfolio.templateId
+    ? templates.find((t) => t.id === portfolio.templateId) || null
+    : null;
+
+  const items = portfolio.items.map((item) => {
+    const work = worksMap.get(item.workId);
+    return {
+      item,
+      work: work ? toApiWork(work) : null,
+    };
+  });
+
+  const readiness = template
+    ? computeReadiness(portfolio, template, worksMap)
+    : null;
+
+  const comments = readComments().filter(
+    (c) => c.portfolioId === portfolio.id
+  );
+
+  res.json({
+    portfolio,
+    template,
+    readiness,
+    items,
+    comments,
+  });
+});
+
+app.get("/api/shared/:slug/comments", (req, res) => {
+  const slug = req.params.slug;
+  const portfolio = findPortfolioBySlug(slug);
+  if (!portfolio) return res.status(404).send("Shared portfolio not found");
+  const comments = readComments().filter(
+    (c) => c.portfolioId === portfolio.id
+  );
+  res.json(comments);
+});
+
+app.post("/api/shared/:slug/comments", (req, res) => {
+  const slug = req.params.slug;
+  const portfolio = findPortfolioBySlug(slug);
+  if (!portfolio) return res.status(404).send("Shared portfolio not found");
+
+  const { authorName, role = null, text, workId = null } = req.body || {};
+  if (!authorName || !text) {
+    return res.status(400).send("authorName and text are required");
+  }
+
+  const now = Date.now();
+  const id = `${now}-${Math.random().toString(16).slice(2)}`;
+
+  const comments = readComments();
+  const comment = {
+    id,
+    portfolioId: portfolio.id,
+    workId: typeof workId === "string" ? workId : null,
+    authorName: String(authorName).trim(),
+    role: typeof role === "string" ? role.trim() || null : null,
+    text: String(text).trim(),
+    createdAt: now,
+  };
+  comments.unshift(comment);
+  writeComments(comments);
+
+  res.status(201).json(comment);
 });
 
 // ---------- 헬스 체크 ----------
