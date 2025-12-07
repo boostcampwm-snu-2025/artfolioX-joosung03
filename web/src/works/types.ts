@@ -9,5 +9,7 @@ export interface Work {
     project?: string | null;
     year?: string | null;
     tags?: string[];
+    category?: string | null;
+    materials?: string[];
   }
   

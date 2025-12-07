@@ -13,6 +13,8 @@ export default function WorksPage() {
   const [project, setProject] = useState("");
   const [year, setYear] = useState("");
   const [tagsInput, setTagsInput] = useState("");
+  const [category, setCategory] = useState("");
+  const [materialsInput, setMaterialsInput] = useState("");
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -72,6 +74,8 @@ export default function WorksPage() {
     setProject("");
     setYear("");
     setTagsInput("");
+    setCategory("");
+    setMaterialsInput("");
     setSelectedFile(null);
     setPreviewUrl(null);
     setEditingId(null);
@@ -94,6 +98,11 @@ export default function WorksPage() {
         .split(",")
         .map((t) => t.trim())
         .filter((t) => t.length > 0) ?? [];
+    const materials =
+      materialsInput
+        .split(",")
+        .map((t) => t.trim())
+        .filter((t) => t.length > 0) ?? [];
 
     const formData = new FormData();
     formData.append("userEmail", user.email);
@@ -102,6 +111,8 @@ export default function WorksPage() {
     formData.append("project", project.trim());
     formData.append("year", year.trim());
     formData.append("tags", JSON.stringify(tags));
+    formData.append("category", category.trim());
+    formData.append("materials", JSON.stringify(materials));
     if (selectedFile) {
       formData.append("image", selectedFile);
     }
@@ -138,6 +149,8 @@ export default function WorksPage() {
     setProject(work.project ?? "");
     setYear(work.year ?? "");
     setTagsInput(work.tags?.join(", ") ?? "");
+    setCategory(work.category ?? "");
+    setMaterialsInput(work.materials?.join(", ") ?? "");
     setSelectedFile(null);
     setPreviewUrl(work.imageUrl ?? null);
     setError(null);
@@ -178,7 +191,9 @@ export default function WorksPage() {
       !text ||
       w.title.toLowerCase().includes(text) ||
       (w.description ?? "").toLowerCase().includes(text) ||
-      (w.tags ?? []).some((t) => t.toLowerCase().includes(text));
+      (w.tags ?? []).some((t) => t.toLowerCase().includes(text)) ||
+      (w.category ?? "").toLowerCase().includes(text) ||
+      (w.materials ?? []).some((m) => m.toLowerCase().includes(text));
 
     const matchesProject =
       !proj || (w.project ?? "").toLowerCase().includes(proj);
@@ -229,12 +244,32 @@ export default function WorksPage() {
             </label>
 
             <label>
+              <span>Category</span>
+              <input
+                type="text"
+                value={category}
+                onChange={(e) => setCategory(e.target.value)}
+                placeholder="예: foundation_drawing, color_painting"
+              />
+            </label>
+
+            <label>
               <span>Tags (comma separated)</span>
               <input
                 type="text"
                 value={tagsInput}
                 onChange={(e) => setTagsInput(e.target.value)}
                 placeholder="예: 인물, 유화, 흑백"
+              />
+            </label>
+
+            <label>
+              <span>Materials (comma separated)</span>
+              <input
+                type="text"
+                value={materialsInput}
+                onChange={(e) => setMaterialsInput(e.target.value)}
+                placeholder="예: pencil, charcoal, acrylic"
               />
             </label>
 
@@ -335,6 +370,18 @@ export default function WorksPage() {
                           {w.tags.map((t) => (
                             <span key={t} className="tag-chip">
                               {t}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                      {(w.category || (w.materials && w.materials.length > 0)) && (
+                        <div className="tag-list">
+                          {w.category && (
+                            <span className="tag-chip">#{w.category}</span>
+                          )}
+                          {(w.materials ?? []).map((m) => (
+                            <span key={m} className="tag-chip">
+                              {m}
                             </span>
                           ))}
                         </div>
