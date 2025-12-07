@@ -4,6 +4,7 @@ import DashboardPage from "./pages/DashboardPage";
 import WorksPage from "./pages/WorksPage";
 import PortfoliosPage from "./pages/PortfoliosPage";
 import { RequireAuth } from "./auth/RequireAuth";
+import PortfolioSharePage from "./pages/PortfolioSharePage";
 import "./App.css";
 
 function App() {
@@ -38,6 +39,8 @@ function App() {
             </RequireAuth>
           }
         />
+
+        <Route path="/share/:slug" element={<PortfolioSharePage />} />
 
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
