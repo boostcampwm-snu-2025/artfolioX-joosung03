@@ -31,7 +31,11 @@ export function AppHeader() {
             {user.email}
           </span>
         )}
-        <button className="header-link" type="button" onClick={handleLogout}>
+        <button
+          className="pill-button logout-btn"
+          type="button"
+          onClick={handleLogout}
+        >
           Log out
         </button>
       </div>
