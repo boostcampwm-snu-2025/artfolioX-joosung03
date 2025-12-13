@@ -27,6 +27,7 @@ export interface TemplateRule {
 
 export interface Template {
   id: string;
+  userEmail?: string;
   name: string;
   rules: TemplateRule[];
   minTotal?: number;

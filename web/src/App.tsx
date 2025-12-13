@@ -5,6 +5,7 @@ import WorksPage from "./pages/WorksPage";
 import PortfoliosPage from "./pages/PortfoliosPage";
 import { RequireAuth } from "./auth/RequireAuth";
 import PortfolioSharePage from "./pages/PortfolioSharePage";
+import TemplatesPage from "./pages/TemplatesPage";
 import "./App.css";
 
 function App() {
@@ -36,6 +37,15 @@ function App() {
           element={
             <RequireAuth>
               <PortfoliosPage />
+            </RequireAuth>
+          }
+        />
+
+        <Route
+          path="/templates"
+          element={
+            <RequireAuth>
+              <TemplatesPage />
             </RequireAuth>
           }
         />
