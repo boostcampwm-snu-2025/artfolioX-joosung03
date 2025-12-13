@@ -416,6 +416,21 @@ body {
   align-items: end;
 }
 
+.ui-grid-3 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 10px;
+}
+
+.ui-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  margin-top: 10px;
+}
+
 .ui-input,
 .ui-select,
 .ui-textarea {

@@ -247,7 +247,7 @@ export default function TemplatesPage() {
           <div className="card" style={{ marginTop: 12 }}>
             <h3 style={{ marginTop: 0 }}>내 템플릿 저장</h3>
             <div className="ui-form">
-              <div className="ui-grid-2">
+              <div className="ui-grid-3">
                 <label className="ui-field">
                   <span className="ui-label">템플릿 이름</span>
                   <input
@@ -257,28 +257,26 @@ export default function TemplatesPage() {
                     placeholder="예: 기초소묘 중심 (나의 버전)"
                   />
                 </label>
-                <div className="ui-grid-2">
-                  <label className="ui-field">
-                    <span className="ui-label">최소 작품 수</span>
-                    <input
-                      className="ui-input"
-                      type="number"
-                      min={0}
-                      value={newTemplateMinTotal}
-                      onChange={(e) => setNewTemplateMinTotal(Number(e.target.value))}
-                    />
-                  </label>
-                  <label className="ui-field">
-                    <span className="ui-label">최대 작품 수</span>
-                    <input
-                      className="ui-input"
-                      type="number"
-                      min={0}
-                      value={newTemplateMaxTotal}
-                      onChange={(e) => setNewTemplateMaxTotal(Number(e.target.value))}
-                    />
-                  </label>
-                </div>
+                <label className="ui-field">
+                  <span className="ui-label">최소 작품 수</span>
+                  <input
+                    className="ui-input"
+                    type="number"
+                    min={0}
+                    value={newTemplateMinTotal}
+                    onChange={(e) => setNewTemplateMinTotal(Number(e.target.value))}
+                  />
+                </label>
+                <label className="ui-field">
+                  <span className="ui-label">최대 작품 수</span>
+                  <input
+                    className="ui-input"
+                    type="number"
+                    min={0}
+                    value={newTemplateMaxTotal}
+                    onChange={(e) => setNewTemplateMaxTotal(Number(e.target.value))}
+                  />
+                </label>
               </div>
 
               <div className="ui-field">
@@ -348,7 +346,7 @@ export default function TemplatesPage() {
                     </div>
                   ))}
                 </div>
-                <div className="ui-row">
+                <div className="ui-actions">
                   <button
                     type="button"
                     className="ui-btn ui-btn-secondary"
