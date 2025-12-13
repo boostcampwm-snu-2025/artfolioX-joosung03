@@ -113,6 +113,18 @@ function buildWorksMap() {
 function computeReadiness(portfolio, template, worksMap) {
   if (!template || !Array.isArray(template.rules)) return null;
 
+  function normalizeCategory(raw) {
+    const s = typeof raw === "string" ? raw.trim().toLowerCase() : "";
+    if (!s) return "uncategorized";
+    // accept Korean labels / variants too
+    if (s.includes("기초소묘") || s.includes("소묘")) return "foundation_drawing";
+    if (s.includes("색채") || s.includes("채색")) return "color_painting";
+    if (s.includes("발상") || s.includes("컨셉") || s.includes("구상"))
+      return "concept_piece";
+    if (s.includes("기초디자인") || s.includes("디자인")) return "foundation_design";
+    return s;
+  }
+
   const totals = {
     total: portfolio.items.length,
     minTotal: template.minTotal ?? null,
@@ -120,6 +132,7 @@ function computeReadiness(portfolio, template, worksMap) {
   };
 
   let missingCount = 0;
+  let missingRulesCount = 0;
   let totalRequired = 0;
 
   const rules = template.rules.map((rule) => {
@@ -128,12 +141,13 @@ function computeReadiness(portfolio, template, worksMap) {
     const current = portfolio.items.reduce((acc, item) => {
       const work = worksMap.get(item.workId);
       if (!work) return acc;
-      const category = work.category || "uncategorized";
-      return category === rule.category ? acc + 1 : acc;
+      const category = normalizeCategory(work.category);
+      return category === normalizeCategory(rule.category) ? acc + 1 : acc;
     }, 0);
 
     const missing = Math.max(0, required - current);
     missingCount += missing;
+    missingRulesCount += missing;
     const maxExceeded =
       typeof rule.maxCount === "number" && rule.maxCount >= 0
         ? Math.max(0, current - rule.maxCount)
@@ -169,13 +183,16 @@ function computeReadiness(portfolio, template, worksMap) {
     if (totals.total === 0) summaryStatus = "empty";
   }
 
+  // coverage is based on rule requirements only (minTotal affects summary.missingCount, not coverage%)
   const coveragePercent =
     totalRequired > 0
       ? Math.max(
           0,
           Math.min(
             100,
-            Math.round(((totalRequired - missingCount) / totalRequired) * 100)
+            Math.round(
+              ((totalRequired - missingRulesCount) / totalRequired) * 100
+            )
           )
         )
       : 100;

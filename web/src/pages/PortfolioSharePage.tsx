@@ -157,51 +157,69 @@ export default function PortfolioSharePage() {
 
         <section className="card" style={{ marginTop: 24 }}>
           <h3>선생님 코멘트</h3>
-          <div className="ui-row">
-            <input
-              type="text"
-              className="ui-input"
-              placeholder="이름"
-              value={authorName}
-              onChange={(e) => setAuthorName(e.target.value)}
-            />
-            <input
-              type="text"
-              className="ui-input"
-              placeholder="역할/소속 (선택)"
-              value={role}
-              onChange={(e) => setRole(e.target.value)}
-            />
-            <select
-              className="ui-select"
-              value={targetWorkId}
-              onChange={(e) => setTargetWorkId(e.target.value)}
-            >
-              <option value="">전체 포트폴리오</option>
-              {sortedItems
-                .filter(({ work }) => work)
-                .map(({ item, work }) => (
-                  <option key={item.workId} value={item.workId}>
-                    작품: {work?.title}
-                  </option>
-                ))}
-            </select>
+          <div className="ui-form">
+            <div className="ui-grid-3">
+              <label className="ui-field">
+                <span className="ui-label">이름</span>
+                <input
+                  type="text"
+                  className="ui-input"
+                  placeholder="이름"
+                  value={authorName}
+                  onChange={(e) => setAuthorName(e.target.value)}
+                />
+              </label>
+              <label className="ui-field">
+                <span className="ui-label">역할/소속</span>
+                <input
+                  type="text"
+                  className="ui-input"
+                  placeholder="역할/소속 (선택)"
+                  value={role}
+                  onChange={(e) => setRole(e.target.value)}
+                />
+              </label>
+              <label className="ui-field">
+                <span className="ui-label">대상</span>
+                <select
+                  className="ui-select"
+                  value={targetWorkId}
+                  onChange={(e) => setTargetWorkId(e.target.value)}
+                >
+                  <option value="">전체 포트폴리오</option>
+                  {sortedItems
+                    .filter(({ work }) => work)
+                    .map(({ item, work }) => (
+                      <option key={item.workId} value={item.workId}>
+                        작품: {work?.title}
+                      </option>
+                    ))}
+                </select>
+              </label>
+            </div>
+
+            <label className="ui-field">
+              <span className="ui-label">코멘트</span>
+              <textarea
+                rows={3}
+                className="ui-textarea"
+                placeholder="코멘트를 남겨주세요"
+                value={text}
+                onChange={(e) => setText(e.target.value)}
+              />
+            </label>
+
+            <div className="ui-actions">
+              <button
+                type="button"
+                className="ui-btn ui-btn-primary"
+                onClick={handleSubmitComment}
+                disabled={submitting}
+              >
+                {submitting ? "Submitting..." : "Submit comment"}
+              </button>
+            </div>
           </div>
-          <textarea
-            rows={3}
-            className="ui-textarea"
-            placeholder="코멘트를 남겨주세요"
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-          />
-          <button
-            type="button"
-            className="ui-btn ui-btn-primary"
-            onClick={handleSubmitComment}
-            disabled={submitting}
-          >
-            {submitting ? "Submitting..." : "Submit comment"}
-          </button>
           {(localError || error) && (
             <p className="error-text">{localError || error}</p>
           )}
