@@ -157,20 +157,23 @@ export default function PortfolioSharePage() {
 
         <section className="card" style={{ marginTop: 24 }}>
           <h3>선생님 코멘트</h3>
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          <div className="ui-row">
             <input
               type="text"
+              className="ui-input"
               placeholder="이름"
               value={authorName}
               onChange={(e) => setAuthorName(e.target.value)}
             />
             <input
               type="text"
+              className="ui-input"
               placeholder="역할/소속 (선택)"
               value={role}
               onChange={(e) => setRole(e.target.value)}
             />
             <select
+              className="ui-select"
               value={targetWorkId}
               onChange={(e) => setTargetWorkId(e.target.value)}
             >
@@ -186,16 +189,16 @@ export default function PortfolioSharePage() {
           </div>
           <textarea
             rows={3}
+            className="ui-textarea"
             placeholder="코멘트를 남겨주세요"
             value={text}
             onChange={(e) => setText(e.target.value)}
-            style={{ marginTop: 8, width: "100%" }}
           />
           <button
             type="button"
+            className="ui-btn ui-btn-primary"
             onClick={handleSubmitComment}
             disabled={submitting}
-            style={{ marginTop: 8 }}
           >
             {submitting ? "Submitting..." : "Submit comment"}
           </button>

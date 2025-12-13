@@ -11,15 +11,14 @@ type TemplateRuleDraft = {
   maxCount?: number;
 };
 
-function safeJsonParseRules(text: string): TemplateRuleDraft[] | null {
-  try {
-    const raw = JSON.parse(text);
-    if (!Array.isArray(raw)) return null;
-    return raw as TemplateRuleDraft[];
-  } catch {
-    return null;
-  }
-}
+const CATEGORY_PRESETS: { value: string; label: string }[] = [
+  { value: "foundation_drawing", label: "기초소묘" },
+  { value: "color_painting", label: "색채" },
+  { value: "concept_piece", label: "발상/컨셉" },
+  { value: "foundation_design", label: "기초디자인" },
+  { value: "sculpture", label: "입체" },
+  { value: "digital", label: "디지털" },
+];
 
 export default function TemplatesPage() {
   const { user } = useAuth();
@@ -35,11 +34,11 @@ export default function TemplatesPage() {
   const [error, setError] = useState<string | null>(null);
 
   const [newTemplateName, setNewTemplateName] = useState("");
-  const [newTemplateRulesText, setNewTemplateRulesText] = useState(
-    '[{"category":"foundation_drawing","minCount":2,"maxCount":6}]'
-  );
-  const [newTemplateMinTotal, setNewTemplateMinTotal] = useState("4");
-  const [newTemplateMaxTotal, setNewTemplateMaxTotal] = useState("12");
+  const [newTemplateRules, setNewTemplateRules] = useState<TemplateRuleDraft[]>([
+    { category: "foundation_drawing", minCount: 2, maxCount: 6 },
+  ]);
+  const [newTemplateMinTotal, setNewTemplateMinTotal] = useState<number>(4);
+  const [newTemplateMaxTotal, setNewTemplateMaxTotal] = useState<number>(12);
 
   async function loadTemplates() {
     if (!userEmail) return;
@@ -115,9 +114,21 @@ export default function TemplatesPage() {
       setError("템플릿 이름을 입력해주세요.");
       return;
     }
-    const rules = safeJsonParseRules(newTemplateRulesText);
-    if (!rules || rules.length === 0) {
-      setError("규칙 JSON 형식이 올바르지 않습니다.");
+    const rules = newTemplateRules
+      .map((r) => ({
+        category: (r.category || "").trim(),
+        minCount:
+          typeof r.minCount === "number" && Number.isFinite(r.minCount)
+            ? r.minCount
+            : undefined,
+        maxCount:
+          typeof r.maxCount === "number" && Number.isFinite(r.maxCount)
+            ? r.maxCount
+            : undefined,
+      }))
+      .filter((r) => r.category.length > 0);
+    if (rules.length === 0) {
+      setError("규칙을 최소 1개 이상 추가해주세요.");
       return;
     }
     try {
@@ -129,8 +140,8 @@ export default function TemplatesPage() {
           userEmail,
           name,
           rules,
-          minTotal: newTemplateMinTotal.trim(),
-          maxTotal: newTemplateMaxTotal.trim(),
+          minTotal: newTemplateMinTotal,
+          maxTotal: newTemplateMaxTotal,
         }),
       });
       if (!res.ok) {
@@ -235,55 +246,140 @@ export default function TemplatesPage() {
 
           <div className="card" style={{ marginTop: 12 }}>
             <h3 style={{ marginTop: 0 }}>내 템플릿 저장</h3>
-            <div style={{ display: "grid", gap: 8 }}>
-              <input
-                value={newTemplateName}
-                onChange={(e) => setNewTemplateName(e.target.value)}
-                placeholder="템플릿 이름"
-              />
-              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                <input
-                  style={{ width: 140 }}
-                  value={newTemplateMinTotal}
-                  onChange={(e) => setNewTemplateMinTotal(e.target.value)}
-                  placeholder="minTotal"
-                />
-                <input
-                  style={{ width: 140 }}
-                  value={newTemplateMaxTotal}
-                  onChange={(e) => setNewTemplateMaxTotal(e.target.value)}
-                  placeholder="maxTotal"
-                />
-                <button type="button" onClick={handleCreateTemplate}>
-                  템플릿 저장
-                </button>
+            <div className="ui-form">
+              <div className="ui-grid-2">
+                <label className="ui-field">
+                  <span className="ui-label">템플릿 이름</span>
+                  <input
+                    className="ui-input"
+                    value={newTemplateName}
+                    onChange={(e) => setNewTemplateName(e.target.value)}
+                    placeholder="예: 기초소묘 중심 (나의 버전)"
+                  />
+                </label>
+                <div className="ui-grid-2">
+                  <label className="ui-field">
+                    <span className="ui-label">최소 작품 수</span>
+                    <input
+                      className="ui-input"
+                      type="number"
+                      min={0}
+                      value={newTemplateMinTotal}
+                      onChange={(e) => setNewTemplateMinTotal(Number(e.target.value))}
+                    />
+                  </label>
+                  <label className="ui-field">
+                    <span className="ui-label">최대 작품 수</span>
+                    <input
+                      className="ui-input"
+                      type="number"
+                      min={0}
+                      value={newTemplateMaxTotal}
+                      onChange={(e) => setNewTemplateMaxTotal(Number(e.target.value))}
+                    />
+                  </label>
+                </div>
               </div>
-              <textarea
-                rows={4}
-                value={newTemplateRulesText}
-                onChange={(e) => setNewTemplateRulesText(e.target.value)}
-                placeholder='규칙 JSON 예: [{"category":"foundation_drawing","minCount":2,"maxCount":6}]'
-              />
+
+              <div className="ui-field">
+                <span className="ui-label">카테고리 규칙</span>
+                <div className="ui-rule-list">
+                  {newTemplateRules.map((r, idx) => (
+                    <div key={`${idx}-${r.category}`} className="ui-rule-row">
+                      <select
+                        className="ui-select"
+                        value={r.category}
+                        onChange={(e) =>
+                          setNewTemplateRules((prev) =>
+                            prev.map((x, i) =>
+                              i === idx ? { ...x, category: e.target.value } : x
+                            )
+                          )
+                        }
+                      >
+                        {CATEGORY_PRESETS.map((c) => (
+                          <option key={c.value} value={c.value}>
+                            {c.label}
+                          </option>
+                        ))}
+                      </select>
+                      <input
+                        className="ui-input ui-input-sm"
+                        type="number"
+                        min={0}
+                        value={r.minCount ?? 0}
+                        onChange={(e) =>
+                          setNewTemplateRules((prev) =>
+                            prev.map((x, i) =>
+                              i === idx ? { ...x, minCount: Number(e.target.value) } : x
+                            )
+                          )
+                        }
+                        placeholder="최소"
+                        aria-label="minCount"
+                      />
+                      <input
+                        className="ui-input ui-input-sm"
+                        type="number"
+                        min={0}
+                        value={r.maxCount ?? 0}
+                        onChange={(e) =>
+                          setNewTemplateRules((prev) =>
+                            prev.map((x, i) =>
+                              i === idx ? { ...x, maxCount: Number(e.target.value) } : x
+                            )
+                          )
+                        }
+                        placeholder="최대"
+                        aria-label="maxCount"
+                      />
+                      <button
+                        type="button"
+                        className="ui-btn ui-btn-ghost"
+                        onClick={() =>
+                          setNewTemplateRules((prev) =>
+                            prev.length <= 1 ? prev : prev.filter((_, i) => i !== idx)
+                          )
+                        }
+                        disabled={newTemplateRules.length <= 1}
+                      >
+                        삭제
+                      </button>
+                    </div>
+                  ))}
+                </div>
+                <div className="ui-row">
+                  <button
+                    type="button"
+                    className="ui-btn ui-btn-secondary"
+                    onClick={() =>
+                      setNewTemplateRules((prev) => [
+                        ...prev,
+                        { category: "foundation_drawing", minCount: 1, maxCount: 3 },
+                      ])
+                    }
+                  >
+                    규칙 추가
+                  </button>
+                  <button type="button" className="ui-btn ui-btn-primary" onClick={handleCreateTemplate}>
+                    템플릿 저장
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
 
           <div className="card" style={{ marginTop: 12 }}>
             <h3 style={{ marginTop: 0 }}>포트폴리오에 적용 · 준비도 · 공유</h3>
-            <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
-              <select
-                value={selectedPortfolioId}
-                onChange={(e) => setSelectedPortfolioId(e.target.value)}
-              >
+            <div className="ui-row">
+              <select className="ui-select" value={selectedPortfolioId} onChange={(e) => setSelectedPortfolioId(e.target.value)}>
                 {portfolios.map((p) => (
                   <option key={p.id} value={p.id}>
                     {p.title}
                   </option>
                 ))}
               </select>
-              <select
-                value={selectedTemplateId}
-                onChange={(e) => setSelectedTemplateId(e.target.value)}
-              >
+              <select className="ui-select" value={selectedTemplateId} onChange={(e) => setSelectedTemplateId(e.target.value)}>
                 <option value="">템플릿 선택 없음</option>
                 {templates.map((tpl) => (
                   <option key={tpl.id} value={tpl.id}>
@@ -291,13 +387,13 @@ export default function TemplatesPage() {
                   </option>
                 ))}
               </select>
-              <button type="button" onClick={handleApplyTemplateToPortfolio}>
+              <button type="button" className="ui-btn ui-btn-secondary" onClick={handleApplyTemplateToPortfolio}>
                 적용
               </button>
-              <button type="button" onClick={handleCheckReadiness} disabled={!selectedTemplateId}>
+              <button type="button" className="ui-btn ui-btn-primary" onClick={handleCheckReadiness} disabled={!selectedTemplateId}>
                 준비도 계산
               </button>
-              <button type="button" onClick={handleGenerateShareLink}>
+              <button type="button" className="ui-btn ui-btn-primary" onClick={handleGenerateShareLink}>
                 공유 링크 생성
               </button>
             </div>
