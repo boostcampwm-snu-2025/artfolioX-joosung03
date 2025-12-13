@@ -31,6 +31,8 @@ React 19, TypeScript, Vite로 구성되어 있으며, `server/`에서 실행되�
 - 템플릿 준비도 패널: 템플릿 선택 후 규칙 충족도(부족 카테고리 포함)를 계산해 보여줍니다.
 - 코멘트 수집: 공유 뷰에서 선생님 코멘트 작성 → 서버 저장 → 학생 측 목록 반영.
 - 데이터 필드 확장: `Work`에 `category`, `materials` 추가(템플릿 매칭/메타데이터용).
+- Templates 탭(신규): `/templates`에서 템플릿을 규칙 빌더로 저장하고, 포트폴리오에 적용/준비도 계산/공유 링크 발급을 한 화면에서 관리합니다.
+- Works 캔버스 메모(신규): Works 우측 패널에 작품별 캔버스를 제공하며 펜/텍스트/박스/지우개로 메모를 남길 수 있습니다(텍스트는 캔버스 위 실시간 렌더링 + 커서 깜박임).
 
 ### API 설정 (API configuration)
 
@@ -67,4 +69,6 @@ npm run lint       # ESLint 실행
   - `src/pages/LoginPage.tsx`
   - `src/pages/WorksPage.tsx`
   - `src/pages/PortfoliosPage.tsx`
+  - `src/pages/TemplatesPage.tsx`
+  - `src/pages/PortfolioSharePage.tsx` (공유 뷰어)
 - 공용 헤더 / 내비게이션: `src/layout/AppHeader.tsx`
