@@ -4,7 +4,7 @@ const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
 const { readWorks, writeWorks } = require("./worksStore");
-const { readTemplates } = require("./templatesStore");
+const { readTemplates, writeTemplates } = require("./templatesStore");
 const { readComments, writeComments } = require("./commentsStore");
 const {
     readPortfolios,
@@ -340,9 +340,90 @@ app.delete("/api/works/:id", (req, res) => {
 
 // ---------- Templates API ----------
 
-app.get("/api/templates", (_req, res) => {
+function normalizeTemplateRule(raw) {
+  if (!raw || typeof raw !== "object") return null;
+  const category =
+    typeof raw.category === "string" ? raw.category.trim() : "";
+  if (!category) return null;
+  const min =
+    typeof raw.minCount === "number"
+      ? raw.minCount
+      : typeof raw.minCount === "string"
+      ? Number(raw.minCount)
+      : undefined;
+  const max =
+    typeof raw.maxCount === "number"
+      ? raw.maxCount
+      : typeof raw.maxCount === "string"
+      ? Number(raw.maxCount)
+      : undefined;
+  return {
+    category,
+    minCount: Number.isFinite(min) ? min : undefined,
+    maxCount: Number.isFinite(max) ? max : undefined,
+  };
+}
+
+app.get("/api/templates", (req, res) => {
   const templates = readTemplates();
+  const userEmail = req.query.userEmail;
+  if (userEmail && typeof userEmail === "string") {
+    // show global templates (no userEmail) + templates created by this user
+    return res.json(
+      templates.filter((t) => !t.userEmail || t.userEmail === userEmail)
+    );
+  }
   res.json(templates);
+});
+
+// create a user template
+app.post("/api/templates", (req, res) => {
+  const { userEmail, name, rules, minTotal, maxTotal } = req.body || {};
+  if (!userEmail || typeof userEmail !== "string") {
+    return res.status(400).send("userEmail is required");
+  }
+  if (!name || typeof name !== "string") {
+    return res.status(400).send("name is required");
+  }
+  if (!Array.isArray(rules)) {
+    return res.status(400).send("rules must be an array");
+  }
+
+  const normalizedRules = rules
+    .map(normalizeTemplateRule)
+    .filter(Boolean);
+  if (normalizedRules.length === 0) {
+    return res.status(400).send("at least one valid rule is required");
+  }
+
+  const minT =
+    typeof minTotal === "number"
+      ? minTotal
+      : typeof minTotal === "string"
+      ? Number(minTotal)
+      : undefined;
+  const maxT =
+    typeof maxTotal === "number"
+      ? maxTotal
+      : typeof maxTotal === "string"
+      ? Number(maxTotal)
+      : undefined;
+
+  const templates = readTemplates();
+  const now = Date.now();
+  const id = `tpl-${now}-${Math.random().toString(16).slice(2, 6)}`;
+  const tpl = {
+    id,
+    userEmail: userEmail.trim(),
+    name: name.trim(),
+    rules: normalizedRules,
+    minTotal: Number.isFinite(minT) ? minT : undefined,
+    maxTotal: Number.isFinite(maxT) ? maxT : undefined,
+  };
+
+  templates.unshift(tpl);
+  writeTemplates(templates);
+  res.status(201).json(tpl);
 });
 
 app.get("/api/templates/:id", (req, res) => {
@@ -525,7 +606,11 @@ app.post("/api/portfolios/:id/share", (req, res) => {
   all[idx] = updated;
   writePortfolios(all);
 
-  const baseUrl = process.env.BASE_URL || `http://localhost:${PORT}`;
+  // Share URL should point to the frontend route (/share/:slug)
+  const baseUrl =
+    process.env.FRONTEND_BASE_URL ||
+    req.headers.origin ||
+    "http://localhost:5173";
   res.json({
     shareSlug: slug,
     url: `${baseUrl}/share/${slug}`,

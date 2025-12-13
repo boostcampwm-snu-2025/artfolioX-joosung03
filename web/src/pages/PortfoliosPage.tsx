@@ -3,12 +3,7 @@ import type { ChangeEvent, FormEvent } from "react";
 import { useAuth } from "../auth/AuthContext";
 import { AppHeader } from "../layout/AppHeader";
 import type { Work } from "../works/types";
-import type {
-  PortfolioVersion,
-  PortfolioItem,
-  Template,
-  PortfolioReadiness,
-} from "../portfolios/types";
+import type { PortfolioVersion, PortfolioItem } from "../portfolios/types";
 
 type BasicFormState = {
   title: string;
@@ -43,10 +38,6 @@ export default function PortfoliosPage() {
   const [basicForm, setBasicForm] = useState<BasicFormState>(EMPTY_BASIC_FORM);
   const isComposingRef = useRef(false);
   const [itemDrafts, setItemDrafts] = useState<Record<string, ItemDraft>>({});
-  const [templates, setTemplates] = useState<Template[]>([]);
-  const [selectedTemplateId, setSelectedTemplateId] = useState("");
-  const [readiness, setReadiness] = useState<PortfolioReadiness | null>(null);
-  const [shareUrl, setShareUrl] = useState<string | null>(null);
 
   // ----- 작품 목록: 서버에서 가져오기 -----
   useEffect(() => {
@@ -122,20 +113,6 @@ export default function PortfoliosPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
-  useEffect(() => {
-    async function loadTemplates() {
-      try {
-        const res = await fetch(`${API_BASE_URL}/templates`);
-        if (!res.ok) return;
-        const data = (await res.json()) as Template[];
-        setTemplates(data);
-      } catch (err) {
-        console.error("loadTemplates error", err);
-      }
-    }
-    loadTemplates();
-  }, []);
-
   // 현재 선택된 포트폴리오
   const current = portfolios.find((p) => p.id === selectedId) ?? null;
 
@@ -151,13 +128,6 @@ export default function PortfoliosPage() {
       targetMajor: current.targetMajor ?? "",
       year: current.year ?? "",
     });
-    setSelectedTemplateId(current.templateId ?? "");
-    setShareUrl(
-      current.shareSlug
-        ? `${window.location.origin}/share/${current.shareSlug}`
-        : null
-    );
-    setReadiness(null);
     const nextDrafts: Record<string, ItemDraft> = {};
     for (const item of current.items) {
       nextDrafts[item.workId] = {
@@ -306,66 +276,6 @@ export default function PortfoliosPage() {
     } catch (err) {
       console.error(err);
       setError("포트폴리오 업데이트 중 오류가 발생했습니다.");
-    }
-  }
-
-  async function handleApplyTemplate() {
-    if (!current) return;
-    await updatePortfolioRemote(current.id, {
-      templateId: selectedTemplateId || null,
-    } as Partial<PortfolioVersion>);
-  }
-
-  async function handleCheckReadiness() {
-    if (!current || !selectedTemplateId) return;
-    try {
-      setError(null);
-      const res = await fetch(
-        `${API_BASE_URL}/portfolios/${current.id}/readiness`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ templateId: selectedTemplateId }),
-        }
-      );
-      if (!res.ok) {
-        const t = await res.text();
-        throw new Error(t || "준비도 계산에 실패했습니다.");
-      }
-      const data = (await res.json()) as PortfolioReadiness;
-      setReadiness(data);
-    } catch (err) {
-      console.error(err);
-      setError(
-        err instanceof Error ? err.message : "준비도 계산 중 오류가 발생했습니다."
-      );
-    }
-  }
-
-  async function handleGenerateShareLink() {
-    if (!current) return;
-    try {
-      setError(null);
-      const res = await fetch(
-        `${API_BASE_URL}/portfolios/${current.id}/share`,
-        { method: "POST" }
-      );
-      if (!res.ok) {
-        const t = await res.text();
-        throw new Error(t || "공유 링크 생성에 실패했습니다.");
-      }
-      const data = (await res.json()) as { shareSlug: string; url: string };
-      setShareUrl(data.url);
-      setPortfolios((prev) =>
-        prev.map((p) =>
-          p.id === current.id ? { ...p, shareSlug: data.shareSlug } : p
-        )
-      );
-    } catch (err) {
-      console.error(err);
-      setError(
-        err instanceof Error ? err.message : "공유 링크 생성 중 오류가 발생했습니다."
-      );
     }
   }
 
@@ -993,82 +903,11 @@ export default function PortfoliosPage() {
                   </div>
 
                   <div className="card" style={{ marginTop: 12 }}>
-                    <h4>Template & Share</h4>
-                    <div
-                      style={{
-                        display: "flex",
-                        gap: 8,
-                        flexWrap: "wrap",
-                        alignItems: "center",
-                        marginBottom: 8,
-                      }}
-                    >
-                      <select
-                        value={selectedTemplateId}
-                        onChange={(e) => setSelectedTemplateId(e.target.value)}
-                        className="template-select"
-                      >
-                        <option value="">템플릿 선택 없음</option>
-                        {templates.map((tpl) => (
-                          <option key={tpl.id} value={tpl.id}>
-                            {tpl.name}
-                          </option>
-                        ))}
-                      </select>
-                      <button
-                        type="button"
-                        className="template-btn"
-                        onClick={handleApplyTemplate}
-                      >
-                        템플릿 저장
-                      </button>
-                      <button
-                        type="button"
-                        className="template-btn"
-                        onClick={handleCheckReadiness}
-                        disabled={!selectedTemplateId}
-                      >
-                        준비도 계산
-                      </button>
-                      <button
-                        type="button"
-                        className="template-btn"
-                        onClick={handleGenerateShareLink}
-                      >
-                        공유 링크 생성
-                      </button>
-                    </div>
-
-                    {readiness && (
-                      <div className="tag-list" style={{ marginBottom: 8 }}>
-                        <span className="tag-chip">
-                          {readiness.templateName}
-                        </span>
-                        <span className="tag-chip">
-                          준비도 {readiness.summary.coveragePercent}% (
-                          {readiness.summary.status})
-                        </span>
-                        {readiness.summary.missingCount > 0 && (
-                          <span className="tag-chip warning">
-                            부족 {readiness.summary.missingCount}
-                          </span>
-                        )}
-                      </div>
-                    )}
-
-                    {shareUrl ? (
-                      <div className="hint-text">
-                        공유 URL:{" "}
-                        <a href={shareUrl} target="_blank" rel="noreferrer">
-                          {shareUrl}
-                        </a>
-                      </div>
-                    ) : (
-                      <p className="hint-text">
-                        공유 링크를 생성하면 로그인 없이 열람 가능한 URL이
-                        만들어집니다.
-                      </p>
-                    )}
+                    <h4>Templates</h4>
+                    <p className="hint-text" style={{ margin: 0 }}>
+                      템플릿 저장/준비도/공유 기능은 <a href="/templates">Templates</a> 탭에서
+                      관리합니다.
+                    </p>
                   </div>
                 </div>
               </div>

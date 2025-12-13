@@ -26,6 +26,13 @@ export function AppHeader() {
         >
           Portfolios
         </Link>
+        <Link
+          to="/templates"
+          className="header-link"
+          style={{ marginRight: 16 }}
+        >
+          Templates
+        </Link>
         {user && (
           <span style={{ fontSize: 12, opacity: 0.7, marginRight: 12 }}>
             {user.email}
