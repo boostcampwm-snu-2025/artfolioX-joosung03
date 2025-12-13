@@ -12,12 +12,12 @@ type TemplateRuleDraft = {
 };
 
 const CATEGORY_PRESETS: { value: string; label: string }[] = [
-  { value: "foundation_drawing", label: "기초소묘" },
-  { value: "color_painting", label: "색채" },
-  { value: "concept_piece", label: "발상/컨셉" },
-  { value: "foundation_design", label: "기초디자인" },
-  { value: "sculpture", label: "입체" },
-  { value: "digital", label: "디지털" },
+  { value: "기초소묘", label: "기초소묘" },
+  { value: "색채", label: "색채" },
+  { value: "발상/컨셉", label: "발상/컨셉" },
+  { value: "기초디자인", label: "기초디자인" },
+  { value: "입체", label: "입체" },
+  { value: "디지털", label: "디지털" },
 ];
 
 export default function TemplatesPage() {
@@ -35,7 +35,7 @@ export default function TemplatesPage() {
 
   const [newTemplateName, setNewTemplateName] = useState("");
   const [newTemplateRules, setNewTemplateRules] = useState<TemplateRuleDraft[]>([
-    { category: "foundation_drawing", minCount: 2, maxCount: 6 },
+    { category: "기초소묘", minCount: 2, maxCount: 6 },
   ]);
   const [newTemplateMinTotal, setNewTemplateMinTotal] = useState<number>(4);
   const [newTemplateMaxTotal, setNewTemplateMaxTotal] = useState<number>(12);
@@ -353,7 +353,7 @@ export default function TemplatesPage() {
                     onClick={() =>
                       setNewTemplateRules((prev) => [
                         ...prev,
-                        { category: "foundation_drawing", minCount: 1, maxCount: 3 },
+                        { category: "기초소묘", minCount: 1, maxCount: 3 },
                       ])
                     }
                   >
