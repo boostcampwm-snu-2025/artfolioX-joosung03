@@ -123,3 +123,6 @@ npm run dev
 - UI/테마
   - Works/Portfolios/Templates/Share 전 페이지에 밝은 파스텔 테마를 일관 적용했습니다.
   - 공통 폼 UI를 `ui-*` 클래스로 통일하고(버튼/입력/그리드), 템플릿/코멘트 영역의 오버플로우/겹침을 개선했습니다.
+
+### 최종 구현 영상 링크
+- https://youtu.be/4eBtpVhIaNs
