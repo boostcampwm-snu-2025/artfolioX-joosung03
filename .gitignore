@@ -48,6 +48,9 @@ logs/
 *.bak
 *.tmp
 
+# Server runtime data
+server/data/*.json
+
 # Deployment
 .vercel/
 .netlify/
