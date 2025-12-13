@@ -116,7 +116,11 @@ function computeReadiness(portfolio, template, worksMap) {
   function normalizeCategory(raw) {
     const s = typeof raw === "string" ? raw.trim().toLowerCase() : "";
     if (!s) return "uncategorized";
-    // accept Korean labels / variants too
+    // accept Korean labels / variants AND legacy english codes
+    if (s === "foundation_drawing") return "foundation_drawing";
+    if (s === "color_painting") return "color_painting";
+    if (s === "concept_piece") return "concept_piece";
+    if (s === "foundation_design") return "foundation_design";
     if (s.includes("기초소묘") || s.includes("소묘")) return "foundation_drawing";
     if (s.includes("색채") || s.includes("채색")) return "color_painting";
     if (s.includes("발상") || s.includes("컨셉") || s.includes("구상"))

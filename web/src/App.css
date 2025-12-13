@@ -441,6 +441,9 @@ body {
   color: #0f172a;
   box-shadow: inset 0 1px 3px rgba(255, 133, 161, 0.08);
   font-size: 13px;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .ui-textarea {
@@ -519,6 +522,14 @@ body {
 
 .ui-rule-row .ui-input-sm {
   width: 96px;
+}
+
+/* Prevent long text from breaking layout (comments, URLs) */
+.comment-item,
+.hint-text,
+.work-desc {
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .works-board {
