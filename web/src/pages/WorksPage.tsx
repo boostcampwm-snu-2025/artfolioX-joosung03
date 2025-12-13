@@ -213,65 +213,72 @@ export default function WorksPage() {
           </p>
 
           <form onSubmit={handleSubmit} className="work-form">
-            <label>
-              <span>Title</span>
-              <input
-                type="text"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                required
-              />
-            </label>
+            <div className="work-form-grid">
+              <label>
+                <span>Title</span>
+                <input
+                  type="text"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder="작품 제목을 입력하세요"
+                  required
+                />
+              </label>
+              <label>
+                <span>Project</span>
+                <input
+                  type="text"
+                  value={project}
+                  onChange={(e) => setProject(e.target.value)}
+                  placeholder="예: 입시 포트폴리오 / 개인 작업"
+                />
+              </label>
+              <label>
+                <span>Year</span>
+                <input
+                  type="text"
+                  value={year}
+                  onChange={(e) => setYear(e.target.value)}
+                  placeholder="예: 2024"
+                />
+              </label>
+              <label>
+                <span>Category</span>
+                <input
+                  type="text"
+                  value={category}
+                  onChange={(e) => setCategory(e.target.value)}
+                  placeholder="예: 기초소묘 / 색채 / 입체 / 디자인"
+                />
+              </label>
+            </div>
 
-            <label>
-              <span>Project</span>
-              <input
-                type="text"
-                value={project}
-                onChange={(e) => setProject(e.target.value)}
-                placeholder="예: 입시 포트폴리오, 개인 작업"
-              />
-            </label>
-
-            <label>
-              <span>Year</span>
-              <input
-                type="text"
-                value={year}
-                onChange={(e) => setYear(e.target.value)}
-                placeholder="예: 2024"
-              />
-            </label>
-
-            <label>
-              <span>Category</span>
-              <input
-                type="text"
-                value={category}
-                onChange={(e) => setCategory(e.target.value)}
-                placeholder="예: foundation_drawing, color_painting"
-              />
-            </label>
-
-            <label>
-              <span>Tags (comma separated)</span>
-              <input
-                type="text"
-                value={tagsInput}
-                onChange={(e) => setTagsInput(e.target.value)}
-                placeholder="예: 인물, 유화, 흑백"
-              />
-            </label>
-
-            <label>
-              <span>Materials (comma separated)</span>
-              <input
-                type="text"
-                value={materialsInput}
-                onChange={(e) => setMaterialsInput(e.target.value)}
-                placeholder="예: pencil, charcoal, acrylic"
-              />
-            </label>
+            <div className="work-form-grid">
+              <label>
+                <span>Tags</span>
+                <input
+                  type="text"
+                  value={tagsInput}
+                  onChange={(e) => setTagsInput(e.target.value)}
+                  placeholder="예: 인물, 수채화, 포트폴리오"
+                />
+                <span className="input-hint">
+                  콤마로 구분해 키워드를 적어주세요
+                </span>
+              </label>
+              <label>
+                <span>Materials</span>
+                <input
+                  type="text"
+                  value={materialsInput}
+                  onChange={(e) => setMaterialsInput(e.target.value)}
+                  placeholder="예: 연필, 콘테, 아크릴"
+                />
+                <span className="input-hint">
+                  콤마로 구분해 사용 재료를 적어주세요
+                </span>
+              </label>
+            </div>
 
             <label>
               <span>Note</span>
@@ -279,6 +286,7 @@ export default function WorksPage() {
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 rows={3}
+                placeholder="작업 의도, 진행 방식, 배운 점 등을 짧게 정리"
               />
             </label>
 
@@ -289,6 +297,7 @@ export default function WorksPage() {
                 accept="image/*"
                 onChange={handleFileChange}
               />
+              <span className="input-hint">JPG/PNG, 최대 1개 업로드</span>
               {previewUrl && (
                 <div className="work-preview">
                   <img src={previewUrl} alt="preview" />
