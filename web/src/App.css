@@ -102,6 +102,9 @@
 .app-main {
   margin-top: 72px;
   padding: 24px;
+  width: min(1200px, calc(100% - 32px));
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .mode-toggle {
@@ -234,6 +237,140 @@
 .hint-text {
   font-size: 12px;
   opacity: 0.7;
+}
+
+.pill {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #0b1220;
+  border: 1px solid #1f2937;
+  font-size: 11px;
+  color: #e5e7eb;
+}
+
+.card {
+  border-radius: 16px;
+  border: 1px solid #1f2937;
+  background: #020617;
+  padding: 16px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+}
+
+.share-main {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.share-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(320px, 1fr);
+  gap: 16px;
+}
+
+.share-header h2 {
+  margin: 4px 0;
+}
+
+.share-preview-list {
+  margin-top: 12px;
+}
+
+.share-right {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.readiness-list {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.readiness-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.tag-chip.success {
+  border-color: #22c55e;
+  color: #22c55e;
+}
+
+.comment-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.comment-form input,
+.comment-form select,
+.comment-form textarea {
+  padding: 8px;
+  border-radius: 8px;
+  border: 1px solid #1f2937;
+  background: #0b1220;
+  color: #e5e7eb;
+  font-size: 12px;
+}
+
+.comment-form button {
+  align-self: flex-end;
+  padding: 8px 12px;
+  border-radius: 999px;
+  border: none;
+  background: #38bdf8;
+  color: #020617;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.comment-form button:hover {
+  background: #0ea5e9;
+}
+
+.comment-list-wrapper {
+  margin-top: 12px;
+}
+
+.comment-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.comment-item {
+  padding: 8px;
+  border-radius: 10px;
+  border: 1px solid #1f2937;
+  background: #0b1220;
+}
+
+.comment-head {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+@media (max-width: 900px) {
+  .share-grid {
+    grid-template-columns: 1fr;
+  }
+  .share-main {
+    width: 100%;
+  }
+  .app-main {
+    width: calc(100% - 24px);
+  }
 }
 
 .work-preview {
