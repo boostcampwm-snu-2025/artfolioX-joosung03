@@ -1006,6 +1006,7 @@ export default function PortfoliosPage() {
                       <select
                         value={selectedTemplateId}
                         onChange={(e) => setSelectedTemplateId(e.target.value)}
+                        className="template-select"
                       >
                         <option value="">템플릿 선택 없음</option>
                         {templates.map((tpl) => (
@@ -1014,17 +1015,26 @@ export default function PortfoliosPage() {
                           </option>
                         ))}
                       </select>
-                      <button type="button" onClick={handleApplyTemplate}>
+                      <button
+                        type="button"
+                        className="template-btn"
+                        onClick={handleApplyTemplate}
+                      >
                         템플릿 저장
                       </button>
                       <button
                         type="button"
+                        className="template-btn"
                         onClick={handleCheckReadiness}
                         disabled={!selectedTemplateId}
                       >
                         준비도 계산
                       </button>
-                      <button type="button" onClick={handleGenerateShareLink}>
+                      <button
+                        type="button"
+                        className="template-btn"
+                        onClick={handleGenerateShareLink}
+                      >
                         공유 링크 생성
                       </button>
                     </div>
