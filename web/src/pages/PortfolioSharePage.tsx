@@ -9,22 +9,28 @@ export default function PortfolioSharePage() {
   const [role, setRole] = useState("");
   const [text, setText] = useState("");
   const [targetWorkId, setTargetWorkId] = useState<string | "">("");
+  const [localError, setLocalError] = useState<string | null>(null);
 
   async function handleSubmitComment() {
     if (!slug) return;
     if (!authorName.trim() || !text.trim()) {
-      setError("이름과 코멘트를 입력해주세요.");
+      setLocalError("이름과 코멘트를 입력해주세요.");
       return;
     }
-    setError(null);
-    await submitComment({
-      authorName: authorName.trim(),
-      role: role.trim(),
-      text: text.trim(),
-      workId: targetWorkId || null,
-    });
-    setText("");
-    setTargetWorkId("");
+    setLocalError(null);
+    try {
+      await submitComment({
+        authorName: authorName.trim(),
+        role: role.trim(),
+        text: text.trim(),
+        workId: targetWorkId || null,
+      });
+      setText("");
+      setTargetWorkId("");
+    } catch (err) {
+      // error message already set inside hook; keep local error for UI clarity
+      setLocalError(err instanceof Error ? err.message : "코멘트 저장에 실패했습니다.");
+    }
   }
 
   if (loading) {
@@ -193,7 +199,9 @@ export default function PortfolioSharePage() {
           >
             {submitting ? "Submitting..." : "Submit comment"}
           </button>
-          {error && <p className="error-text">{error}</p>}
+          {(localError || error) && (
+            <p className="error-text">{localError || error}</p>
+          )}
 
           <div style={{ marginTop: 16 }}>
             {comments.length === 0 && (

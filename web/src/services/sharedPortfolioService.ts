@@ -1,12 +1,13 @@
 import type {
   FeedbackComment,
+  PortfolioItem,
   PortfolioReadiness,
   PortfolioVersion,
   Template,
 } from "../portfolios/types";
 import type { Work } from "../works/types";
 
-export type SharedItem = { item: { workId: string; order: number }; work: Work | null };
+export type SharedItem = { item: PortfolioItem; work: Work | null };
 
 export type SharedResponse = {
   portfolio: PortfolioVersion;
