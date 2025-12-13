@@ -1,70 +1,14 @@
-import { useEffect, useMemo, useState } from "react";
+import { useState } from "react";
 import { useParams } from "react-router-dom";
-import type { Work } from "../works/types";
-import type {
-  PortfolioItem,
-  PortfolioVersion,
-  Template,
-  PortfolioReadiness,
-  FeedbackComment,
-} from "../portfolios/types";
-import { API_BASE_URL } from "../api/config";
-
-type SharedItem = { item: PortfolioItem; work: Work | null };
-
-type SharedResponse = {
-  portfolio: PortfolioVersion;
-  template: Template | null;
-  readiness: PortfolioReadiness | null;
-  items: SharedItem[];
-  comments: FeedbackComment[];
-};
+import { useSharedPortfolio } from "../hooks/useSharedPortfolio";
 
 export default function PortfolioSharePage() {
   const { slug } = useParams<{ slug: string }>();
-  const apiHost = useMemo(
-    () => API_BASE_URL.replace(/\/api$/, ""),
-    []
-  );
-  const [data, setData] = useState<SharedResponse | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
+  const { data, loading, error, submitting, submitComment } = useSharedPortfolio(slug);
   const [authorName, setAuthorName] = useState("");
   const [role, setRole] = useState("");
   const [text, setText] = useState("");
   const [targetWorkId, setTargetWorkId] = useState<string | "">("");
-  const [submitting, setSubmitting] = useState(false);
-
-  useEffect(() => {
-    async function load() {
-      if (!slug) return;
-      try {
-        setError(null);
-        setLoading(true);
-        const res = await fetch(`${apiHost}/api/shared/${slug}`);
-        if (!res.ok) {
-          const t = await res.text();
-          throw new Error(t || "공유 포트폴리오를 불러올 수 없습니다.");
-        }
-        const json = (await res.json()) as SharedResponse;
-        setData(json);
-      } catch (err) {
-        console.error(err);
-        setError(
-          err instanceof Error ? err.message : "로드 중 오류가 발생했습니다."
-        );
-      } finally {
-        setLoading(false);
-      }
-    }
-    load();
-  }, [slug, apiHost]);
-
-  const sortedItems = useMemo(() => {
-    if (!data) return [];
-    return [...data.items].sort((a, b) => a.item.order - b.item.order);
-  }, [data]);
 
   async function handleSubmitComment() {
     if (!slug) return;
@@ -72,40 +16,15 @@ export default function PortfolioSharePage() {
       setError("이름과 코멘트를 입력해주세요.");
       return;
     }
-    try {
-      setSubmitting(true);
-      setError(null);
-      const res = await fetch(
-        `${apiHost}/api/shared/${slug}/comments`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            authorName: authorName.trim(),
-            role: role.trim(),
-            text: text.trim(),
-            workId: targetWorkId || null,
-          }),
-        }
-      );
-      if (!res.ok) {
-        const t = await res.text();
-        throw new Error(t || "코멘트 저장에 실패했습니다.");
-      }
-      const saved = (await res.json()) as FeedbackComment;
-      setData((prev) =>
-        prev
-          ? { ...prev, comments: [saved, ...prev.comments] }
-          : prev
-      );
-      setText("");
-      setTargetWorkId("");
-    } catch (err) {
-      console.error(err);
-      setError(err instanceof Error ? err.message : "알 수 없는 오류가 발생했습니다.");
-    } finally {
-      setSubmitting(false);
-    }
+    setError(null);
+    await submitComment({
+      authorName: authorName.trim(),
+      role: role.trim(),
+      text: text.trim(),
+      workId: targetWorkId || null,
+    });
+    setText("");
+    setTargetWorkId("");
   }
 
   if (loading) {
@@ -125,6 +44,7 @@ export default function PortfolioSharePage() {
   }
 
   const { portfolio, template, readiness, comments } = data;
+  const sortedItems = [...data.items].sort((a, b) => a.item.order - b.item.order);
 
   return (
     <div className="app-root">
@@ -276,9 +196,10 @@ export default function PortfolioSharePage() {
           {error && <p className="error-text">{error}</p>}
 
           <div style={{ marginTop: 16 }}>
-            {comments.length === 0 ? (
+            {comments.length === 0 && (
               <p className="hint-text">아직 코멘트가 없습니다.</p>
-            ) : (
+            )}
+            {comments.length > 0 && (
               <ul className="comment-list">
                 {comments.map((c) => (
                   <li key={c.id} className="comment-item">
