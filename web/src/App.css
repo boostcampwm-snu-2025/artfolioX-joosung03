@@ -403,6 +403,12 @@ body {
   margin-top: 8px;
 }
 
+.ui-row .ui-input,
+.ui-row .ui-select {
+  flex: 1 1 220px;
+  min-width: 180px;
+}
+
 .ui-grid-2 {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -440,6 +446,9 @@ body {
 }
 
 .ui-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   border-radius: 999px;
   border: 1px solid #ffb5d9;
   padding: 10px 14px;
@@ -448,6 +457,7 @@ body {
   background: linear-gradient(135deg, #ff85a1, #ffb5d9);
   color: #ffffff;
   box-shadow: 0 12px 28px rgba(255, 133, 161, 0.22);
+  white-space: nowrap;
 }
 
 .ui-btn:disabled {
@@ -481,10 +491,19 @@ body {
 }
 
 .ui-rule-row {
-  display: grid;
-  grid-template-columns: minmax(180px, 1fr) 110px 110px 86px;
+  display: flex;
+  flex-wrap: wrap;
   gap: 8px;
   align-items: center;
+}
+
+.ui-rule-row .ui-select {
+  flex: 1 1 240px;
+  min-width: 180px;
+}
+
+.ui-rule-row .ui-input-sm {
+  width: 96px;
 }
 
 .works-board {
